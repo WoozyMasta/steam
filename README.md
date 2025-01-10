@@ -15,8 +15,12 @@ servers, and more. See each package’s README for detailed information.
 * **[utils/latest]**  
   Offers a threshold-based version selection mechanism, helpful for
   automatically updating Steam-based game servers.
+* **[utils/notify]**  
+  Provides functionality to send, edit, and delete notifications
+  in various messaging platforms, including Discord and Telegram.
 
 <!-- links -->
 [filedetails]: ./filedetails/README.md
 [serverlist]: ./serverlist/README.md
 [utils/latest]: ./utils/latest/README.md
+[utils/notify]: ./utils/notify/README.md
