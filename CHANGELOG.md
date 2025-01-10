@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning][].
 
 * in `utils/latest` function `CompareVersions` return `int8` now
 
-[0.1.1]: https://github.com/WoozyMasta/steam/releases/tag/v0.1.1
+[0.1.1]: https://github.com/WoozyMasta/steam/compare/v0.1.0...v0.1.1
 
 ## [0.1.0][] - 2025-01-09
 
@@ -35,7 +35,7 @@ First public release
 * `serverlist`
 * `utils/latest`
 
-[0.1.0]: https://github.com/WoozyMasta/steam/releases/tag/v0.1.0
+[0.1.0]: https://github.com/WoozyMasta/steam/tree/v0.1.0
 
 <!--links-->
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
