@@ -62,7 +62,7 @@ func (d *Discord) Send(msg string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer resp.Body.Close()
+	defer closeBody(resp)
 
 	if resp.StatusCode >= 400 {
 		return 0, fmt.Errorf("failed to send message, status code: %d", resp.StatusCode)
@@ -123,7 +123,7 @@ func (d *Discord) Edit(id uint64, msg string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer closeBody(resp)
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("failed to edit message, status code: %d", resp.StatusCode)
@@ -154,7 +154,7 @@ func (d *Discord) Delete(id uint64) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer closeBody(resp)
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("failed to delete message, status code: %d", resp.StatusCode)
