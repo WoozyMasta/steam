@@ -90,7 +90,7 @@ Comparison logic:
     b) Otherwise, compare as strings in lexicographical order
  3. If one version has fewer segments, the missing segments are treated as empty
 */
-func CompareVersions(v1, v2 string) int {
+func CompareVersions(v1, v2 string) int8 {
 	v1parts := strings.Split(v1, ".")
 	v2parts := strings.Split(v2, ".")
 
