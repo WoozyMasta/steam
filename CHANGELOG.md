@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning][].
 
 * `utils/notify`
 
+### Changed
+
+* in `utils/latest` function `CompareVersions` return `int8` now
+
 [0.1.1]: https://github.com/WoozyMasta/steam/releases/tag/v0.1.1
 
 ## [0.1.0][] - 2025-01-09
