@@ -45,7 +45,7 @@ type Server struct {
 	GamePort   uint16   `json:"gameport"`         // Game port (for client connections)
 	MaxPlayers uint16   `json:"max_players"`      // Maximum number of players on the server
 	Players    uint16   `json:"players"`          // Current number of players on the server
-	Region     int8     `json:"region,omitempty"` // Server region code
+	Region     int      `json:"region,omitempty"` // Server region code
 	Dedicated  bool     `json:"dedicated"`        // Indicates if the server is dedicated
 	Secure     bool     `json:"secure"`           // Indicates if protection is enabled (e.g., VAC or BattlEye)
 }
