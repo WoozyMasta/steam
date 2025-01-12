@@ -114,3 +114,8 @@ func (id AppID) String() string {
 
 	return fmt.Sprint(uint64(id))
 }
+
+// Uint64 returns ID as uint64.
+func (id AppID) Uint64() uint64 {
+	return uint64(id)
+}
