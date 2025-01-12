@@ -12,6 +12,8 @@ servers, and more. See each package’s README for detailed information.
 * **[serverlist]**  
   Allows retrieving and filtering Steam game servers through the Steam Game
   Servers API.
+* **[utils/appid]**  
+  Provides a collection of constants representing Steam application IDs
 * **[utils/latest]**  
   Offers a threshold-based version selection mechanism, helpful for
   automatically updating Steam-based game servers.
@@ -22,5 +24,6 @@ servers, and more. See each package’s README for detailed information.
 <!-- links -->
 [filedetails]: ./filedetails/README.md
 [serverlist]: ./serverlist/README.md
+[utils/appid]: ./utils/appid/README.md
 [utils/latest]: ./utils/latest/README.md
 [utils/notify]: ./utils/notify/README.md
