@@ -58,6 +58,8 @@ To obtain an API key, visit: [Steam Dev API Key]
 package filedetails
 
 const (
-	baseURL     string = "https://api.steampowered.com/IPublishedFileService/GetDetails/v1/"
-	baseFileURL string = "https://steamcommunity.com/sharedfiles/filedetails/?id="
+	baseURL         string = "https://api.steampowered.com/IPublishedFileService/GetDetails/v1/"
+	baseFileURL     string = "https://steamcommunity.com/sharedfiles/filedetails/?id="
+	defaultChunkMax        = 220
+	defaultConns           = 10
 )

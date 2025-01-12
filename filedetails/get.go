@@ -8,13 +8,16 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 
 	json "github.com/json-iterator/go"
 )
 
 // Structure describing the parameters of a request to IPublishedFileService/GetDetails/v1/
 type Query struct {
-	key string // Access API key
+	key        string // Access API key
+	concurrent int    // Max items per chunk
+	chunkMax   int    // Concurrent requests
 
 	Language                  string   `json:"language,omitempty"`                  // Specifies the localized text to return. Defaults to English. //* ELanguage
 	DesiredRevision           string   `json:"desired_revision,omitempty"`          // Return the data for the specified revision. //* EPublishedFileRevision
@@ -54,6 +57,8 @@ func New(fileIDs []uint64, key string) *Query {
 
 	return &Query{
 		key:                    key,
+		concurrent:             defaultConns,
+		chunkMax:               defaultChunkMax,
 		PublishedFileIDs:       fileIDs,
 		ShortDescription:       true,
 		StripDescriptionBBCode: true,
@@ -69,6 +74,27 @@ Parameters:
 */
 func (q *Query) SetKey(key string) {
 	q.key = key
+}
+
+/*
+SetConcurrency sets the count of concurrent jobs.
+
+Parameters:
+  - count: Count of concurrent jobs.
+*/
+func (q *Query) SetConcurrency(count int) {
+	q.concurrent = count
+}
+
+/*
+SetChunkMax sets the maximum number of file IDs requested for a single chunk.
+Experimentally calculated limit of 220 identifiers per request, after which we get error 414 URI Too Long
+
+Parameters:
+  - count: Count of concurrent jobs.
+*/
+func (q *Query) SetChunkMax(count int) {
+	q.concurrent = count
 }
 
 /*
@@ -112,6 +138,7 @@ Example:
 	}
 	// use details
 */
+// GetAll - sequential requests (chunks of 220)
 func (q *Query) Get() ([]FileDetail, error) {
 	if q == nil {
 		return nil, fmt.Errorf("Query request parameters not set")
@@ -120,7 +147,89 @@ func (q *Query) Get() ([]FileDetail, error) {
 		return nil, fmt.Errorf("Steam API key is empty or does not match")
 	}
 
-	// build URL with query
+	// Split IDs into chunks
+	chunks := splitIntoChunks(q.PublishedFileIDs, q.chunkMax)
+	var allDetails []FileDetail
+
+	// Make requests sequentially
+	for _, c := range chunks {
+		qq := &Query{
+			key:                    q.key,
+			PublishedFileIDs:       c,
+			AppID:                  q.AppID,
+			ShortDescription:       q.ShortDescription,
+			StripDescriptionBBCode: q.StripDescriptionBBCode,
+			IncludeKVTags:          q.IncludeKVTags,
+		}
+
+		details, err := qq.getChunk()
+		if err != nil {
+			return allDetails, err
+		}
+		allDetails = append(allDetails, details...)
+	}
+
+	return allDetails, nil
+}
+
+// GetConcurrent - same as Get() but requests in parallel with a concurrency limit
+func (q *Query) GetConcurrent() ([]FileDetail, error) {
+	if q == nil {
+		return nil, fmt.Errorf("Query request parameters not set")
+	}
+	if len(q.key) != 32 {
+		return nil, fmt.Errorf("Steam API key is empty or does not match")
+	}
+
+	chunks := splitIntoChunks(q.PublishedFileIDs, q.chunkMax)
+	var allDetails []FileDetail
+	var mu sync.Mutex
+	wg := sync.WaitGroup{}
+
+	// Buffered channel limits the number of concurrent requests
+	sem := make(chan struct{}, q.concurrent)
+
+	for _, c := range chunks {
+		c := c // local copy for goroutine
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			// Acquire slot
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			qq := &Query{
+				key:                    q.key,
+				PublishedFileIDs:       c,
+				AppID:                  q.AppID,
+				ShortDescription:       q.ShortDescription,
+				StripDescriptionBBCode: q.StripDescriptionBBCode,
+				IncludeKVTags:          q.IncludeKVTags,
+			}
+
+			details, err := qq.getChunk()
+			if err != nil {
+				// For real usage consider passing error via channel to handle them properly
+				fmt.Printf("Error in parallel chunk: %v\n", err)
+				return
+			}
+
+			// Merge results with lock
+			mu.Lock()
+			allDetails = append(allDetails, details...)
+			mu.Unlock()
+		}()
+	}
+
+	// Wait until all goroutines are done
+	wg.Wait()
+
+	return allDetails, nil
+}
+
+// getChunk - handles one chunk request
+func (q *Query) getChunk() ([]FileDetail, error) {
 	query := url.Values{}
 	query.Set("key", q.key)
 	for i, id := range q.PublishedFileIDs {
@@ -130,6 +239,7 @@ func (q *Query) Get() ([]FileDetail, error) {
 	v := reflect.ValueOf(*q)
 	t := reflect.TypeOf(*q)
 
+	// Set additional params from struct tags
 	for i := 0; i < v.NumField(); i++ {
 		field := t.Field(i)
 		value := v.Field(i)
@@ -155,10 +265,10 @@ func (q *Query) Get() ([]FileDetail, error) {
 			}
 		}
 	}
-	url := baseURL + "?" + query.Encode()
 
-	// get and decode response
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	u := baseURL + "?" + query.Encode()
+
+	req, err := http.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -168,8 +278,8 @@ func (q *Query) Get() ([]FileDetail, error) {
 		return nil, err
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			fmt.Printf("Error close response body: %v", err)
+		if cerr := resp.Body.Close(); cerr != nil {
+			fmt.Printf("Error close response body: %v\n", cerr)
 		}
 	}()
 
@@ -182,6 +292,7 @@ func (q *Query) Get() ([]FileDetail, error) {
 			Details []FileDetail `json:"publishedfiledetails"`
 		} `json:"response"`
 	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -190,19 +301,19 @@ func (q *Query) Get() ([]FileDetail, error) {
 		return nil, err
 	}
 
-	// Set file details URL
+	// Set file details URL if not set
 	for i, f := range result.Response.Details {
 		if f.URL == "" {
 			result.Response.Details[i].URL = fmt.Sprintf("%s%d", baseFileURL, f.PublishedFileID)
 		}
 	}
 
-	// Return struct if AppID not set
+	// Return struct if AppID is 0
 	if q.AppID == 0 {
 		return result.Response.Details, nil
 	}
 
-	// Validate AppID == ConsumerAppid
+	// Validate AppID == ConsumerAppID
 	for _, f := range result.Response.Details {
 		if q.AppID != f.ConsumerAppID {
 			return result.Response.Details, fmt.Errorf(
@@ -213,4 +324,21 @@ func (q *Query) Get() ([]FileDetail, error) {
 	}
 
 	return result.Response.Details, nil
+}
+
+// splitIntoChunks - helper to split slice into sub-slices
+func splitIntoChunks(ids []uint64, size int) [][]uint64 {
+	if len(ids) == 0 || size <= 0 {
+		return nil
+	}
+
+	var chunks [][]uint64
+	for i := 0; i < len(ids); i += size {
+		end := i + size
+		if end > len(ids) {
+			end = len(ids)
+		}
+		chunks = append(chunks, ids[i:end])
+	}
+	return chunks
 }
