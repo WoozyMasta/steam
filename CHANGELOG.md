@@ -13,6 +13,25 @@ and this project adheres to [Semantic Versioning][].
 ### Removed
 -->
 
+## [0.1.2][] - 2025-01-12
+
+### Added
+
+* `utils/appid`
+* `filedetails` support for splitting requested IDs into chunks to avoid
+  exceeding the URI request length limit
+* `filedetails` new `GetConcurrent` methods for `Query` which allows you to
+  execute multiple API requests concurrently
+* `filedetails` for `Query` added `SetConcurrency` and `SetChunkMax` methods
+
+### Changed
+
+* `serverlist` `Server.Region` change type to `int` to prevent overflow
+* `serverlist` Extend tests
+* `filedetails` Extend tests
+
+[0.1.2]: https://github.com/WoozyMasta/steam/compare/v0.1.1...v0.1.2
+
 ## [0.1.1][] - 2025-01-10
 
 ### Added
