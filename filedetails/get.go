@@ -15,13 +15,12 @@ import (
 
 // Structure describing the parameters of a request to IPublishedFileService/GetDetails/v1/
 type Query struct {
-	key        string // Access API key
-	concurrent int    // Max items per chunk
-	chunkMax   int    // Concurrent requests
-
+	key                       string   ``                                           // Access API key
 	Language                  string   `json:"language,omitempty"`                  // Specifies the localized text to return. Defaults to English. //* ELanguage
 	DesiredRevision           string   `json:"desired_revision,omitempty"`          // Return the data for the specified revision. //* EPublishedFileRevision
 	PublishedFileIDs          []uint64 `json:"publishedfileids"`                    // Set of published file Ids to retrieve details for.
+	concurrent                int      ``                                           // Max items per chunk (internal)
+	chunkMax                  int      ``                                           // Concurrent requests (internal)
 	AppID                     uint64   `json:"appid,omitempty"`                     // Application ID
 	ReturnPlaytimeStats       uint32   `json:"return_playtime_stats,omitempty"`     // Return playtime stats for the specified number of days before today.
 	IncludeTags               bool     `json:"includetags,omitempty"`               // If true, return tag information in the returned details.
