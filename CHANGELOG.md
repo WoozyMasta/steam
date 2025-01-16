@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning][].
 ### Removed
 -->
 
+## [0.1.3][] - 2025-01-17
+
+### Removed
+
+* `utils/notify` to separate project
+  [github.com/woozymasta/notify](https://github.com/WoozyMasta/notify)
+
+[0.1.3]: https://github.com/WoozyMasta/steam/compare/v0.1.2...v0.1.3
+
 ## [0.1.2][] - 2025-01-12
 
 ### Added
