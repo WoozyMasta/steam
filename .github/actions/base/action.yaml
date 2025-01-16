@@ -19,6 +19,10 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
 
+    - name: Go generate
+      shell: bash
+      run: go generate ./...
+
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v6
       with:
